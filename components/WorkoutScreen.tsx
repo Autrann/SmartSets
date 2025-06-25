@@ -1,6 +1,6 @@
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import CustomButton from './CustomButton';
+import React from "react";
+import { StyleSheet, Text, View } from "react-native";
+import CustomButton from "./CustomButton";
 
 interface Props {
   nombreEjercicio: string;
@@ -28,29 +28,35 @@ export default function WorkoutScreen({
   colors,
 }: Props) {
   return (
-    <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-      <Text style={[styles.bigText, { color: colors.text }]}>{nombreEjercicio}</Text>
+    <View
+      style={[
+        styles.card,
+        { backgroundColor: colors.card, borderColor: colors.border },
+      ]}
+    >
+      <Text style={[styles.bigText, { color: colors.text }]}>
+        {nombreEjercicio}
+      </Text>
       <Text style={[styles.subText, { color: colors.subtext }]}>
-        Serie <Text style={{ color: colors.primary, fontWeight: 'bold' }}>{serieActual}</Text> de <Text style={{ fontWeight: 'bold' }}>{series}</Text>
+        Serie{" "}
+        <Text style={{ color: colors.primary, fontWeight: "bold" }}>
+          {serieActual}
+        </Text>{" "}
+        de <Text style={{ fontWeight: "bold" }}>{series}</Text>
       </Text>
       {/* Lógica: descanso terminado, esperar botón para comenzar nueva serie */}
-      {esperandoInicioSerie ? (
-        <CustomButton
-          title="Comenzar nueva serie"
-          onPress={onIniciarNuevaSerie}
-          style={{ backgroundColor: colors.primary }}
-        />
-      ) : timer === 0 ? (
+      {timer === 0 ? (
         <CustomButton title="Terminé la serie" onPress={onTerminarSerie} />
       ) : (
         <Text style={[styles.timerText, { color: colors.primary }]}>
-          Descanso: <Text style={{ fontWeight: 'bold' }}>{timer}s</Text>
+          Descanso: <Text style={{ fontWeight: "bold" }}>{timer}s</Text>
         </Text>
       )}
+
       <CustomButton
         title="Cancelar ejercicio"
         onPress={onCancelar}
-        style={{ backgroundColor: '#ff6060', marginTop: 14 }}
+        style={{ backgroundColor: "#ff6060", marginTop: 14 }}
       />
     </View>
   );
@@ -58,19 +64,19 @@ export default function WorkoutScreen({
 
 const styles = StyleSheet.create({
   card: {
-    width: '100%',
+    width: "100%",
     maxWidth: 400,
     borderRadius: 18,
     padding: 28,
     borderWidth: 1,
-    alignItems: 'center',
+    alignItems: "center",
   },
   bigText: {
     fontSize: 24,
     marginBottom: 12,
-    fontWeight: '600',
+    fontWeight: "600",
     letterSpacing: 0.3,
-    textAlign: 'center',
+    textAlign: "center",
   },
   subText: {
     fontSize: 18,
@@ -80,8 +86,8 @@ const styles = StyleSheet.create({
   timerText: {
     fontSize: 36,
     margin: 24,
-    fontWeight: '700',
+    fontWeight: "700",
     letterSpacing: 1.2,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });
