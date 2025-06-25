@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, StyleSheet, Text, useColorScheme, View } from 'react-native';
+import { Alert, StyleSheet, Text, useColorScheme, Vibration, View } from 'react-native';
 import ConfigScreen from '../components/ConfigScreen';
 import HistoryScreen from '../components/HistoryScreen';
 import WorkoutScreen from '../components/WorkoutScreen';
@@ -37,6 +37,17 @@ export default function HomeScreen() {
   const [registros, setRegistros] = useState<Registro[]>([]);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  const handleSeriesChange = (text: string) => {
+  const clean = text.replace(/[^0-9]/g, '');
+  setSeries(clean);
+};
+
+const handleDescansoChange = (text: string) => {
+  const clean = text.replace(/[^0-9]/g, '');
+  setDescanso(clean);
+};
+
+
   useEffect(() => { cargarHistorial(); }, []);
   const cargarHistorial = async () => {
     try {
@@ -69,7 +80,8 @@ export default function HomeScreen() {
         setTimer((prev) => {
           if (prev <= 1) {
             if (intervalRef.current) clearInterval(intervalRef.current);
-            setEsperandoInicioSerie(true); // Espera que el usuario inicie la siguiente serie
+            Vibration.vibrate(); 
+            setEsperandoInicioSerie(true); 
             return 0;
           }
           return prev - 1;
@@ -135,9 +147,9 @@ export default function HomeScreen() {
           nombreEjercicio={nombreEjercicio}
           setNombreEjercicio={setNombreEjercicio}
           series={series}
-          setSeries={setSeries}
+          setSeries={handleSeriesChange}
           descanso={descanso}
-          setDescanso={setDescanso}
+          setDescanso={handleDescansoChange}
           onStart={empezarEntrenamiento}
           onVerHistorial={() => setPantalla('historial')}
           isDark={isDark}
