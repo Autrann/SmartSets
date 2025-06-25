@@ -7,7 +7,9 @@ interface Props {
   serieActual: number;
   series: string;
   timer: number;
+  esperandoInicioSerie: boolean;
   onTerminarSerie: () => void;
+  onIniciarNuevaSerie: () => void;
   onCancelar: () => void;
   isDark: boolean;
   colors: any;
@@ -18,7 +20,9 @@ export default function WorkoutScreen({
   serieActual,
   series,
   timer,
+  esperandoInicioSerie,
   onTerminarSerie,
+  onIniciarNuevaSerie,
   onCancelar,
   isDark,
   colors,
@@ -29,7 +33,14 @@ export default function WorkoutScreen({
       <Text style={[styles.subText, { color: colors.subtext }]}>
         Serie <Text style={{ color: colors.primary, fontWeight: 'bold' }}>{serieActual}</Text> de <Text style={{ fontWeight: 'bold' }}>{series}</Text>
       </Text>
-      {timer === 0 ? (
+      {/* Lógica: descanso terminado, esperar botón para comenzar nueva serie */}
+      {esperandoInicioSerie ? (
+        <CustomButton
+          title="Comenzar nueva serie"
+          onPress={onIniciarNuevaSerie}
+          style={{ backgroundColor: colors.primary }}
+        />
+      ) : timer === 0 ? (
         <CustomButton title="Terminé la serie" onPress={onTerminarSerie} />
       ) : (
         <Text style={[styles.timerText, { color: colors.primary }]}>
