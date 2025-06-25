@@ -11,7 +11,7 @@ type Registro = {
   seriesPlaneadas: number;
   seriesRealizadas: number;
   status: 'completado' | 'interrumpido';
-  fecha: string;
+  fecha: string; // formato: '2025-06-25 15:22:11'
 };
 
 export default function HomeScreen() {
@@ -33,6 +33,7 @@ export default function HomeScreen() {
   const [descanso, setDescanso] = useState<string>('');
   const [serieActual, setSerieActual] = useState<number>(1);
   const [timer, setTimer] = useState<number>(0);
+  const [esperandoInicioSerie, setEsperandoInicioSerie] = useState<boolean>(false); // Nuevo
   const [registros, setRegistros] = useState<Registro[]>([]);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -56,17 +57,19 @@ export default function HomeScreen() {
     setPantalla('workout');
     setSerieActual(1);
     setTimer(0);
+    setEsperandoInicioSerie(false);
   };
 
+  // Nueva lógica para terminar la serie (al final del descanso muestra botón para comenzar la nueva)
   const terminarSerie = async () => {
     if (serieActual < parseInt(series)) {
       setTimer(parseInt(descanso));
+      setEsperandoInicioSerie(false);
       intervalRef.current = setInterval(() => {
         setTimer((prev) => {
           if (prev <= 1) {
             if (intervalRef.current) clearInterval(intervalRef.current);
-            setSerieActual((s) => s + 1);
-            setTimer(0);
+            setEsperandoInicioSerie(true); // Espera que el usuario inicie la siguiente serie
             return 0;
           }
           return prev - 1;
@@ -79,7 +82,7 @@ export default function HomeScreen() {
         seriesPlaneadas: parseInt(series),
         seriesRealizadas: parseInt(series),
         status: 'completado',
-        fecha: new Date().toLocaleString(),
+        fecha: getFechaDiaHora(),
       });
       Alert.alert('¡Entrenamiento terminado!', '¡Buen trabajo!');
       setPantalla('config');
@@ -87,14 +90,20 @@ export default function HomeScreen() {
     }
   };
 
+  // Botón para empezar la siguiente serie
+  const iniciarNuevaSerie = () => {
+    setEsperandoInicioSerie(false);
+    setSerieActual((s) => s + 1);
+  };
+
   const cancelarEntrenamiento = async () => {
     await guardarRegistro({
       id: Date.now().toString(),
       nombre: nombreEjercicio,
       seriesPlaneadas: parseInt(series),
-      seriesRealizadas: serieActual - 1,
+      seriesRealizadas: serieActual - (esperandoInicioSerie ? 0 : 1),
       status: 'interrumpido',
-      fecha: new Date().toLocaleString(),
+      fecha: getFechaDiaHora(),
     });
     Alert.alert('Entrenamiento interrumpido', 'Se guardó el progreso realizado.');
     setPantalla('config');
@@ -107,8 +116,17 @@ export default function HomeScreen() {
     setDescanso('');
     setSerieActual(1);
     setTimer(0);
+    setEsperandoInicioSerie(false);
     if (intervalRef.current) clearInterval(intervalRef.current);
   };
+
+  // Agrupa los registros por día (YYYY-MM-DD)
+  const registrosPorDia = registros.reduce((acc, registro) => {
+    const fechaDia = registro.fecha.split(' ')[0];
+    acc[fechaDia] = acc[fechaDia] || [];
+    acc[fechaDia].push(registro);
+    return acc;
+  }, {} as { [dia: string]: Registro[] });
 
   return (
     <View style={[styles.mainContainer, { backgroundColor: colors.background }]}>
@@ -132,7 +150,9 @@ export default function HomeScreen() {
           serieActual={serieActual}
           series={series}
           timer={timer}
+          esperandoInicioSerie={esperandoInicioSerie}
           onTerminarSerie={terminarSerie}
+          onIniciarNuevaSerie={iniciarNuevaSerie}
           onCancelar={cancelarEntrenamiento}
           isDark={isDark}
           colors={colors}
@@ -140,7 +160,7 @@ export default function HomeScreen() {
       )}
       {pantalla === 'historial' && (
         <HistoryScreen
-          registros={registros}
+          registrosPorDia={registrosPorDia}
           isDark={isDark}
           colors={colors}
           onVolver={() => setPantalla('config')}
@@ -151,6 +171,12 @@ export default function HomeScreen() {
       </Text>
     </View>
   );
+}
+
+// Utilidad: retorna "YYYY-MM-DD HH:MM:SS"
+function getFechaDiaHora() {
+  const d = new Date();
+  return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`;
 }
 
 const styles = StyleSheet.create({
