@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { FlatList, StyleSheet, Text, View } from 'react-native';
 import CustomButton from './CustomButton';
+
+// Puedes usar el Picker de React Native (nativo) o de @react-native-picker/picker
+import { Picker } from '@react-native-picker/picker';
 
 type Registro = {
   id: string;
@@ -19,51 +22,66 @@ interface Props {
 }
 
 export default function HistoryScreen({ registrosPorDia, isDark, colors, onVolver }: Props) {
-  const [abierto, setAbierto] = useState<{ [dia: string]: boolean }>({});
-
-  const dias = Object.keys(registrosPorDia).sort((a, b) => b.localeCompare(a)); // recientes arriba
+  const fechasDisponibles = Object.keys(registrosPorDia).sort((a, b) => b.localeCompare(a));
+  const [selectedDate, setSelectedDate] = useState<string>(fechasDisponibles[0] || '');
 
   return (
-    <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border, paddingHorizontal: 12, minHeight: 350 }]}>
+    <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border, paddingHorizontal: 12, minHeight: 300 }]}>
       <Text style={[styles.bigText, { color: colors.text }]}>Historial de ejercicios</Text>
-      {dias.length === 0 ? (
+      
+      {fechasDisponibles.length === 0 ? (
         <Text style={{ color: colors.subtext, marginVertical: 20 }}>No hay registros aún.</Text>
       ) : (
-        <FlatList
-          data={dias}
-          keyExtractor={item => item}
-          renderItem={({ item: dia }) => (
-            <View>
-              <Pressable onPress={() => setAbierto(prev => ({ ...prev, [dia]: !prev[dia] }))} style={styles.diaHeader}>
-                <Text style={{ fontWeight: 'bold', fontSize: 16, color: colors.primary }}>
-                  {dia}
+        <>
+          <Text style={{ marginBottom: 8, color: colors.primary, fontWeight: 'bold' }}>
+            Selecciona una fecha:
+          </Text>
+          <View style={{
+            borderWidth: 1,
+            borderColor: colors.border,
+            borderRadius: 8,
+            marginBottom: 12,
+            width: '100%',
+            overflow: 'hidden',
+            backgroundColor: isDark ? '#1a1a1a' : '#f9f9f9',
+          }}>
+            <Picker
+              selectedValue={selectedDate}
+              onValueChange={(itemValue) => setSelectedDate(itemValue)}
+              mode="dropdown"
+              style={{ color: colors.text }}
+              dropdownIconColor={colors.primary}
+            >
+              {fechasDisponibles.map(fecha => (
+                <Picker.Item key={fecha} label={fecha} value={fecha} />
+              ))}
+            </Picker>
+          </View>
+
+          {/* Lista solo los registros de la fecha seleccionada */}
+          <FlatList
+            data={selectedDate ? registrosPorDia[selectedDate] : []}
+            keyExtractor={item => item.id}
+            renderItem={({ item }) => (
+              <View style={[styles.historialItem, { backgroundColor: isDark ? '#1d1d1d' : '#f4f4fa' }]}>
+                <Text style={{ color: colors.primary, fontWeight: 'bold', fontSize: 17 }}>{item.nombre}</Text>
+                <Text style={{ color: colors.text, marginTop: 4 }}>Hora: <Text style={{ color: colors.subtext }}>{item.fecha.split(' ')[1]}</Text></Text>
+                <Text style={{ color: colors.text, marginTop: 2 }}>
+                  Series planeadas: {item.seriesPlaneadas} | Realizadas: {item.seriesRealizadas}
                 </Text>
-                <Text style={{ color: colors.subtext }}>
-                  {abierto[dia] ? '▲' : '▼'}
+                <Text style={{
+                  marginTop: 2,
+                  color: item.status === 'completado' ? '#3bb36a' : '#f14b3b',
+                  fontWeight: 'bold'
+                }}>
+                  {item.status === 'completado' ? 'Completado' : 'Interrumpido'}
                 </Text>
-              </Pressable>
-              {abierto[dia] && (
-                registrosPorDia[dia].map(item => (
-                  <View key={item.id} style={[styles.historialItem, { backgroundColor: isDark ? '#1d1d1d' : '#f4f4fa' }]}>
-                    <Text style={{ color: colors.primary, fontWeight: 'bold', fontSize: 17 }}>{item.nombre}</Text>
-                    <Text style={{ color: colors.text, marginTop: 4 }}>Hora: <Text style={{ color: colors.subtext }}>{item.fecha.split(' ')[1]}</Text></Text>
-                    <Text style={{ color: colors.text, marginTop: 2 }}>
-                      Series planeadas: {item.seriesPlaneadas} | Realizadas: {item.seriesRealizadas}
-                    </Text>
-                    <Text style={{
-                      marginTop: 2,
-                      color: item.status === 'completado' ? '#3bb36a' : '#f14b3b',
-                      fontWeight: 'bold'
-                    }}>
-                      {item.status === 'completado' ? 'Completado' : 'Interrumpido'}
-                    </Text>
-                  </View>
-                ))
-              )}
-            </View>
-          )}
-        />
+              </View>
+            )}
+          />
+        </>
       )}
+
       <CustomButton
         title="Volver"
         onPress={onVolver}
@@ -88,16 +106,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     letterSpacing: 0.3,
     textAlign: 'center',
-  },
-  diaHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#e6ecfa55',
-    padding: 10,
-    borderRadius: 7,
-    marginTop: 8,
-    marginBottom: 2,
   },
   historialItem: {
     marginVertical: 7,
